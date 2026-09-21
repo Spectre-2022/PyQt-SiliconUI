@@ -23,6 +23,12 @@ class LayerModalDialog(SiLayer):
         if self.dialog() is not None:
             return
 
+        previous_dialog = self.dialog_frame.centerWidget()
+        if previous_dialog is not None and previous_dialog is not dialog:
+            previous_dialog.hide()
+            previous_dialog.deleteLater()
+            self.dialog_frame.setCenterWidget(None)
+
         self.dialog_ = dialog
         self.dialog_.show()
         self.dialog_frame.setCenterWidget(self.dialog_)
