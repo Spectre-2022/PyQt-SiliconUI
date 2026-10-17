@@ -14,6 +14,7 @@ class LayerModalDialog(SiLayer):
         self.dialog_frame = SiWidget(self)
         self.dialog_frame.hideCenterWidgetFadeOut()
         self.dialog_frame.animationGroup().fromToken("showing").setBias(0.08)
+        self.dialog_frame.animationGroup().fromToken("showing").finished.connect(self._finishDialogAnimation)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
 
     def dialog(self):
@@ -52,6 +53,20 @@ class LayerModalDialog(SiLayer):
         self.dialog_frame.hideCenterWidgetFadeOut()
         self.dialog_frame.setSiliconWidgetFlag(Si.DeleteCenterWidgetOnCenterWidgetHidden)
         self.dialog_ = None
+
+    def _finishDialogAnimation(self, progress):
+        if self.dialog_frame.animationGroup().fromToken("showing").target() != progress:
+            return
+        center_dialog = self.dialog_frame.centerWidget()
+        if center_dialog is None:
+            return
+        # Paints may be skipped during chained tasks; lifecycle completion must not depend on them.
+        if progress == 1 and center_dialog is self.dialog():
+            center_dialog.show()
+        elif progress == 0 and self.dialog() is None:
+            center_dialog.hide()
+            self.dialog_frame.setCenterWidget(None)
+            center_dialog.deleteLater()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
